@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'core/theme.dart';
 import 'screens/feed_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('es'); // para formatear fechas en español
-  runApp(const EntomoDexApp());
+  await initializeDateFormatting('es');
+  runApp(const ProviderScope(child: EntomoDexApp()));
 }
 
 class EntomoDexApp extends StatelessWidget {

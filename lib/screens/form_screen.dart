@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/constants.dart';
 import '../models/sighting.dart';
+import '../providers/sightings_provider.dart';
 
-class FormScreen extends StatefulWidget {
+class FormScreen extends ConsumerStatefulWidget {
   const FormScreen({super.key});
 
   @override
-  State<FormScreen> createState() => _FormScreenState();
+  ConsumerState<FormScreen> createState() => _FormScreenState();
 }
 
-class _FormScreenState extends State<FormScreen> {
+class _FormScreenState extends ConsumerState<FormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _commonName = TextEditingController();
   final _scientificName = TextEditingController();
@@ -27,11 +29,29 @@ class _FormScreenState extends State<FormScreen> {
     super.dispose();
   }
 
-  void _save() {
+  bool _saving = false;
+
+  Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    // Fase 1: solo UI. El guardado real llega en las fases 3 y 4.
+    setState(() => _saving = true);
+
+    final sighting = Sighting(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      commonName: _commonName.text.trim(),
+      scientificName: _scientificName.text.trim(),
+      orderType: _order!,
+      habitat: _habitat.text.trim(),
+      notes: _notes.text.trim(),
+      danger: _danger,
+      createdAt: DateTime.now(),
+    );
+
+    // Fase 2: guarda en el repositorio simulado. En la Fase 4 se agrega la imagen.
+    await ref.read(sightingsProvider.notifier).add(sighting);
+
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Formulario válido (guardado en Fase 4)')),
+      const SnackBar(content: Text('Avistamiento guardado')),
     );
     Navigator.pop(context);
   }
@@ -129,9 +149,15 @@ class _FormScreenState extends State<FormScreen> {
             ),
             const SizedBox(height: 12),
             FilledButton.icon(
-              onPressed: _save,
-              icon: const Icon(Icons.save_outlined),
-              label: const Text('Guardar avistamiento'),
+              onPressed: _saving ? null : _save,
+              icon: _saving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.save_outlined),
+              label: Text(_saving ? 'Guardando...' : 'Guardar avistamiento'),
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(52),
               ),

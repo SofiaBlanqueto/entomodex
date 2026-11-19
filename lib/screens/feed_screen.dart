@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../providers/filters_provider.dart';
 import '../providers/sightings_provider.dart';
 import '../widgets/order_chips.dart';
@@ -38,21 +39,24 @@ class FeedScreen extends ConsumerWidget {
           Expanded(
             child: sightings.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => _ErrorState(
-                message: 'No se pudieron cargar los avistamientos',
-                onRetry: () => ref.invalidate(sightingsProvider),
-              ),
+              error: (e, st) {
+                debugPrint('ERROR SUPABASE: $e');
+                return _ErrorState(
+                  message: 'No se pudieron cargar los avistamientos\n$e',
+                  onRetry: () => ref.invalidate(sightingsProvider),
+                );
+              },
               data: (items) => items.isEmpty
                   ? const _EmptyState()
                   : GridView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 14,
-                        crossAxisSpacing: 14,
-                        childAspectRatio: 0.78,
-                      ),
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 14,
+                            crossAxisSpacing: 14,
+                            childAspectRatio: 0.78,
+                          ),
                       itemCount: items.length,
                       itemBuilder: (_, i) => SightingCard(
                         sighting: items[i],

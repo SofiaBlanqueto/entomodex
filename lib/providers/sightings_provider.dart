@@ -1,21 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/sighting.dart';
-import '../services/sightings_repository.dart';
+import '../services/supabase_service.dart';
 
-final sightingsRepositoryProvider =
-    Provider<SightingsRepository>((ref) => SightingsRepository());
+final supabaseServiceProvider = Provider<SupabaseService>(
+  (ref) => SupabaseService(Supabase.instance.client),
+);
 
 /// Lista completa de avistamientos con estados loading / error / data.
 class SightingsNotifier extends AsyncNotifier<List<Sighting>> {
   @override
   Future<List<Sighting>> build() {
-    return ref.read(sightingsRepositoryProvider).fetchSightings();
+    return ref.read(supabaseServiceProvider).fetchSightings();
   }
 
-  /// Guarda y agrega al inicio de la lista sin volver a consultar todo.
+  /// Guarda en Supabase y agrega al inicio de la lista sin reconsultar todo.
   Future<void> add(Sighting sighting) async {
     final saved =
-        await ref.read(sightingsRepositoryProvider).insertSighting(sighting);
+        await ref.read(supabaseServiceProvider).insertSighting(sighting);
     state = AsyncData([saved, ...state.value ?? <Sighting>[]]);
   }
 }
